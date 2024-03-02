@@ -10,3 +10,7 @@
 [CounterStrike Sharp](https://github.com/roflmuffin/CounterStrikeSharp "CounterStrike Sharp")
 ### Installation
 Place plugin contents to **addons/counterstrikesharp/plugins/BombsiteAnnouncer**
+
+### Bugs
+#### Known issue:
+- de_dust2 will for some reason always print that the bomb is planted on Site B
