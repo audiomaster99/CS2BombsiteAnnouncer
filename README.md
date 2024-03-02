@@ -2,6 +2,7 @@
 ### Features
 
 - **Simple Bombsite announcer with icons and playercount**
+ 
 ![](https://i.imgur.com/wLDHlFu.png) ![](https://i.imgur.com/ipsAgKk.png)
 
 ### Dependencies
