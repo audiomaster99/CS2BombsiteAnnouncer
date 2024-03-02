@@ -3,7 +3,7 @@
 
 - **Simple Bombsite announcer with icons and playercount**
  
-![](https://i.imgur.com/wLDHlFu.png) ![](https://i.imgur.com/ipsAgKk.png)
+![](https://i.imgur.com/N6nzSbl.png)
 
 ### Dependencies
 [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master "Metamod:Source")
@@ -11,6 +11,3 @@
 ### Installation
 Place plugin contents to **addons/counterstrikesharp/plugins/BombsiteAnnouncer**
 
-### Bugs
-#### Known issue:
-- de_dust2 will for some reason always print that the bomb is planted on Site B
