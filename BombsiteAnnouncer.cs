@@ -1,18 +1,26 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Text.Json.Serialization;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace BombsiteAnnouncer;
-
-public partial class BombsiteAnnouncer : BasePlugin
+public class Config : BasePluginConfig
+{
+    [JsonPropertyName("show-announcer-delay")]
+    public float ShowAnnouncerDelay { get; set; } = 5.0f;
+    [JsonPropertyName("announcer-visible-for-time")]
+    public float AnnouncerVisibleForTime { get; set; } = 10.0f;
+}
+public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
 {
     public override string ModuleName => "BombsiteAnnouncer";
     public override string ModuleAuthor => "audio_brutalci";
     public override string ModuleDescription => "Simple bombsite announcer";
     public override string ModuleVersion => "V. 0.0.1";
 
+    public required Config Config { get; set; }
     public bool bombsiteAnnouncer;
     public string? _site;
     public string? bombsite;
@@ -38,6 +46,10 @@ public partial class BombsiteAnnouncer : BasePlugin
                 }
             }
         });
+    }
+    public void OnConfigParsed(Config config)
+    {
+        Config = config;
     }
     private void OnTick(CCSPlayerController player)
     {
@@ -110,8 +122,11 @@ public partial class BombsiteAnnouncer : BasePlugin
     }
     public void ShowAnnouncer()
     {
-        bombsiteAnnouncer = true;
-        AddTimer(10.0f, () => { bombsiteAnnouncer = false; });
+        AddTimer(Config.ShowAnnouncerDelay, () =>
+        {
+            bombsiteAnnouncer = true;
+            AddTimer(Config.AnnouncerVisibleForTime, () => { bombsiteAnnouncer = false; });
+        });
     }
     // Credits B3none
     public static int GetCurrentNumPlayers(CsTeam? csTeam = null)
