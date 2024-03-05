@@ -83,7 +83,7 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
             _site = $"https://i.imgur.com/WIC4VHx.png";
             bombsite = "B";
         }
-        else
+        if (!site.IsBombSiteB)
         {
             _site = $"https://i.imgur.com/Vjyuiqb.png";
             bombsite = "A";
