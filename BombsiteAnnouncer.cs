@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -57,6 +58,8 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
     }
     private void OnTick(CCSPlayerController player)
     {
+        ctNum = GetCurrentNumPlayers(CsTeam.CounterTerrorist);
+        ttNum = GetCurrentNumPlayers(CsTeam.Terrorist);
         if (player.Team == CsTeam.CounterTerrorist)
         {
             color = "green";
@@ -77,8 +80,8 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
     [GameEventHandler]
     public HookResult OnBombPlanted(EventBombPlanted @event, GameEventInfo info)
     {
-        ctNum = GetCurrentNumPlayers(CsTeam.CounterTerrorist);
-        ttNum = GetCurrentNumPlayers(CsTeam.Terrorist);
+        var c4list = Utilities.FindAllEntitiesByDesignerName<CC4>("weapon_c4");
+        var c4 = c4list.FirstOrDefault();
         var site = new CBombTarget(NativeAPI.GetEntityFromIndex(@event.Site));
         _site = "";
         bombsite = "";
@@ -114,7 +117,6 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         bombsiteAnnouncer = false;
         return HookResult.Continue;
     }
-
     //---- P L U G I N - H E L P E R S ----
     static bool IsValid(CCSPlayerController? player)
     {
@@ -123,6 +125,10 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
     static bool IsConnected(CCSPlayerController? player)
     {
         return player?.Connected == PlayerConnectedState.PlayerConnected;
+    }
+    static bool IsAlive(CCSPlayerController player)
+    {
+        return player.PawnIsAlive;
     }
     public void ShowAnnouncer()
     {
@@ -138,7 +144,7 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         var players = 0;
 
         foreach (var player in Utilities.GetPlayers()
-                     .Where(player => IsValid(player) && IsConnected(player)))
+                     .Where(player => IsAlive(player) && IsValid(player) && IsConnected(player)))
         {
             if (csTeam == null || player.Team == csTeam)
             {
