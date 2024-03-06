@@ -66,7 +66,7 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         player.PrintToCenterHtml(
         $"<font class='fontSize-l' color='{color}'>{message} <font color='white'>SITE</font> <font color='{color}'>{bombsite}</font><br>" +
         $"<img src='{_site}'><br><br>" +
-        $"<font class='fontSize-m' color='white'>{ttNum}</font> <font class='fontSize-m'color='red'>TT   </font><font class='fontSize-m' color='white'> vs.</font>   <font class='fontSize-m' color='white'> {ctNum}   </font><font class='fontSize-m' color='blue'>CT</font>"
+        $"<font class='fontSize-m' color='white'>{ttNum}</font> <font class='fontSize-m'color='red'>T   </font><font class='fontSize-m' color='white'> vs.</font>   <font class='fontSize-m' color='white'> {ctNum}   </font><font class='fontSize-m' color='blue'>CT</font>"
         );
     }
     //---- P L U G I N - H O O O K S ----
