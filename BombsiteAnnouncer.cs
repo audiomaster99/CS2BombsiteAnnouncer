@@ -12,6 +12,10 @@ public class Config : BasePluginConfig
     public float ShowAnnouncerDelay { get; set; } = 5.0f;
     [JsonPropertyName("announcer-visible-for-time")]
     public float AnnouncerVisibleForTime { get; set; } = 10.0f;
+    [JsonPropertyName("bombsite-A-img")]
+    public string BombsiteAimg { get; set; } = "https://i.imgur.com/Vjyuiqb.png";
+    [JsonPropertyName("bombsite-B-img")]
+    public string BombsiteBimg { get; set; } = "https://i.imgur.com/WIC4VHx.png";
 }
 public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
 {
@@ -80,12 +84,12 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         bombsite = "";
         if (site.IsBombSiteB)
         {
-            _site = $"https://i.imgur.com/WIC4VHx.png";
+            _site = $"{Config.BombsiteBimg}";
             bombsite = "B";
         }
         if (!site.IsBombSiteB)
         {
-            _site = $"https://i.imgur.com/Vjyuiqb.png";
+            _site = $"{Config.BombsiteAimg}";
             bombsite = "A";
         }
         ShowAnnouncer();
