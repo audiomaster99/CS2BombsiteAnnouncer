@@ -117,6 +117,12 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         bombsiteAnnouncer = false;
         return HookResult.Continue;
     }
+    [GameEventHandler]
+    public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
+    {
+        bombsiteAnnouncer = false;
+        return HookResult.Continue;
+    }
     //---- P L U G I N - H E L P E R S ----
     static bool IsValid(CCSPlayerController? player)
     {
