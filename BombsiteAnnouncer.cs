@@ -10,7 +10,7 @@ namespace BombsiteAnnouncer;
 public class Config : BasePluginConfig
 {
     [JsonPropertyName("show-announcer-delay")]
-    public float ShowAnnouncerDelay { get; set; } = 5.0f;
+    public float ShowAnnouncerDelay { get; set; } = 0.1f;
     [JsonPropertyName("announcer-visible-for-time")]
     public float AnnouncerVisibleForTime { get; set; } = 10.0f;
     [JsonPropertyName("bombsite-A-img")]
@@ -77,7 +77,7 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         );
     }
     //---- P L U G I N - H O O O K S ----
-    [GameEventHandler]
+    [GameEventHandler(HookMode.Pre)]
     public HookResult OnBombPlanted(EventBombPlanted @event, GameEventInfo info)
     {
         var c4list = Utilities.FindAllEntitiesByDesignerName<CC4>("weapon_c4");
@@ -90,14 +90,14 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
             _site = $"{Config.BombsiteBimg}";
             bombsite = "B";
         }
-        if (!site.IsBombSiteB)
+        else
         {
             _site = $"{Config.BombsiteAimg}";
             bombsite = "A";
         }
         ShowAnnouncer();
         Logger.LogInformation($"Bomb Planted on [{bombsite}]");
-        return HookResult.Continue;
+        return HookResult.Handled;
     }
     [GameEventHandler]
     public HookResult OnBombDefused(EventBombDefused @event, GameEventInfo info)
