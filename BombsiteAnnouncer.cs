@@ -13,6 +13,8 @@ public class Config : BasePluginConfig
     public float ShowAnnouncerDelay { get; set; } = 0.1f;
     [JsonPropertyName("announcer-visible-for-time")]
     public float AnnouncerVisibleForTime { get; set; } = 10.0f;
+    [JsonPropertyName("remove-bomb-planted-message")]
+    public bool RemoveDefaultMsg { get; set; } = true;
     [JsonPropertyName("bombsite-A-img")]
     public string BombsiteAimg { get; set; } = "https://i.imgur.com/Vjyuiqb.png";
     [JsonPropertyName("bombsite-B-img")]
@@ -27,7 +29,6 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
 
     public required Config Config { get; set; }
     public bool bombsiteAnnouncer;
-    public string? _site;
     public string? bombsite;
     public string? message;
     public string? color;
@@ -60,6 +61,22 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
     {
         ctNum = GetCurrentNumPlayers(CsTeam.CounterTerrorist);
         ttNum = GetCurrentNumPlayers(CsTeam.Terrorist);
+
+        // determine site image
+        string siteImage = "";
+        if (bombsite == "B")
+        {
+            siteImage = Config.BombsiteBimg;
+        }
+        else if (bombsite == "A")
+        {
+            siteImage = Config.BombsiteAimg;
+        }
+        else
+        {
+            Logger.LogWarning($"Unknown bombsite value: {bombsite}");
+        }
+
         if (player.Team == CsTeam.CounterTerrorist)
         {
             color = "green";
@@ -70,34 +87,41 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
             color = "red";
             message = "DEFEND";
         }
+
         player.PrintToCenterHtml(
-        $"<font class='fontSize-l' color='{color}'>{message} <font color='white'>SITE</font> <font color='{color}'>{bombsite}</font><br>" +
-        $"<img src='{_site}'><br><br>" +
-        $"<font class='fontSize-m' color='white'>{ttNum}</font> <font class='fontSize-m'color='red'>T   </font><font class='fontSize-m' color='white'> vs.</font>   <font class='fontSize-m' color='white'> {ctNum}   </font><font class='fontSize-m' color='blue'>CT</font>"
+            $"<font class='fontSize-l' color='{color}'>{message} <font color='white'>SITE</font> <font color='{color}'>{bombsite}</font><br>" +
+            $"<img src='{siteImage}'><br><br>" +
+            $"<font class='fontSize-m' color='white'>{ttNum}</font> <font class='fontSize-m'color='red'>T   </font><font class='fontSize-m' color='white'> vs.</font>   <font class='fontSize-m' color='white'> {ctNum}   </font><font class='fontSize-m' color='blue'>CT</font>"
         );
     }
+
     //---- P L U G I N - H O O O K S ----
     [GameEventHandler(HookMode.Pre)]
     public HookResult OnBombPlanted(EventBombPlanted @event, GameEventInfo info)
     {
+        
         var c4list = Utilities.FindAllEntitiesByDesignerName<CC4>("weapon_c4");
         var c4 = c4list.FirstOrDefault();
         var site = new CBombTarget(NativeAPI.GetEntityFromIndex(@event.Site));
-        _site = "";
+
         bombsite = "";
         if (site.IsBombSiteB)
         {
-            _site = $"{Config.BombsiteBimg}";
             bombsite = "B";
         }
-        else
+        if (!site.IsBombSiteB)
         {
-            _site = $"{Config.BombsiteAimg}";
             bombsite = "A";
         }
         ShowAnnouncer();
         Logger.LogInformation($"Bomb Planted on [{bombsite}]");
-        return HookResult.Handled;
+
+        // remove bomb planted message
+        if (Config.RemoveDefaultMsg && @event != null)
+        { 
+            return HookResult.Handled; 
+        }
+        return HookResult.Continue;
     }
     [GameEventHandler]
     public HookResult OnBombDefused(EventBombDefused @event, GameEventInfo info)
