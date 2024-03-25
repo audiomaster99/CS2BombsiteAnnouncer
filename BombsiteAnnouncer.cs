@@ -25,7 +25,7 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
     public override string ModuleName => "BombsiteAnnouncer";
     public override string ModuleAuthor => "audio_brutalci";
     public override string ModuleDescription => "Simple bombsite announcer";
-    public override string ModuleVersion => "V. 0.0.1";
+    public override string ModuleVersion => "V. 0.0.2";
 
     public required Config Config { get; set; }
     public bool bombsiteAnnouncer;
@@ -43,13 +43,7 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         {
             if (bombsiteAnnouncer == true)
             {
-                foreach (var player in Utilities.GetPlayers().Where(player => player is { IsValid: true, IsBot: false }))
-                {
-                    if (IsValid(player) && IsConnected(player))
-                    {
-                        OnTick(player);
-                    }
-                }
+                Utilities.GetPlayers().Where(player => IsValid(player) && IsConnected(player)).ToList().ForEach(p => OnTick(p));
             }
         });
     }
@@ -63,16 +57,8 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         ttNum = GetCurrentNumPlayers(CsTeam.Terrorist);
 
         // determine site image
-        string siteImage = "";
-        if (bombsite == "B")
-        {
-            siteImage = Config.BombsiteBimg;
-        }
-        else if (bombsite == "A")
-        {
-            siteImage = Config.BombsiteAimg;
-        }
-        else
+        string siteImage = bombsite == "B" ? Config.BombsiteBimg : bombsite == "A" ? Config.BombsiteAimg : "";
+        if (siteImage == "")
         {
             Logger.LogWarning($"Unknown bombsite value: {bombsite}");
         }
@@ -80,18 +66,18 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         if (player.Team == CsTeam.CounterTerrorist)
         {
             color = "green";
-            message = "RETAKE";
+            message = Localizer["phrases.retake"];
         }
         else
         {
             color = "red";
-            message = "DEFEND";
+            message = Localizer["phrases.defend"];
         }
 
         player.PrintToCenterHtml(
             $"<font class='fontSize-l' color='{color}'>{message} <font color='white'>SITE</font> <font color='{color}'>{bombsite}</font><br>" +
             $"<img src='{siteImage}'><br><br>" +
-            $"<font class='fontSize-m' color='white'>{ttNum}</font> <font class='fontSize-m'color='red'>T   </font><font class='fontSize-m' color='white'> vs.</font>   <font class='fontSize-m' color='white'> {ctNum}   </font><font class='fontSize-m' color='blue'>CT</font>"
+            $"<font class='fontSize-m' color='white'>{ttNum}</font> <font class='fontSize-m'color='red'>{Localizer["phrases.terrorist"]}   </font><font class='fontSize-m' color='white'> {Localizer["phrases.versus"]}</font>   <font class='fontSize-m' color='white'> {ctNum}   </font><font class='fontSize-m' color='blue'>{Localizer["phrases.cterrorist"]}</font>"
         );
     }
 
@@ -99,27 +85,18 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
     [GameEventHandler(HookMode.Pre)]
     public HookResult OnBombPlanted(EventBombPlanted @event, GameEventInfo info)
     {
-        
-        var c4list = Utilities.FindAllEntitiesByDesignerName<CC4>("weapon_c4");
-        var c4 = c4list.FirstOrDefault();
-        var site = new CBombTarget(NativeAPI.GetEntityFromIndex(@event.Site));
 
-        bombsite = "";
-        if (site.IsBombSiteB)
-        {
-            bombsite = "B";
-        }
-        if (!site.IsBombSiteB)
-        {
-            bombsite = "A";
-        }
+        CBombTarget site = new CBombTarget(NativeAPI.GetEntityFromIndex(@event.Site));
+
+        bombsite = site.IsBombSiteB ? "B" : "A";
+
         ShowAnnouncer();
         Logger.LogInformation($"Bomb Planted on [{bombsite}]");
 
         // remove bomb planted message
         if (Config.RemoveDefaultMsg && @event != null)
-        { 
-            return HookResult.Handled; 
+        {
+            return HookResult.Handled;
         }
         return HookResult.Continue;
     }
@@ -150,7 +127,7 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
     //---- P L U G I N - H E L P E R S ----
     static bool IsValid(CCSPlayerController? player)
     {
-        return player != null && player.IsValid && !player.IsBot && player.PlayerPawn.IsValid;
+        return player?.IsValid == true && player.PlayerPawn?.IsValid == true && !player.IsBot && !player.IsHLTV;
     }
     static bool IsConnected(CCSPlayerController? player)
     {
@@ -171,17 +148,6 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
     // Credits B3none
     public static int GetCurrentNumPlayers(CsTeam? csTeam = null)
     {
-        var players = 0;
-
-        foreach (var player in Utilities.GetPlayers()
-                     .Where(player => IsAlive(player) && IsValid(player) && IsConnected(player)))
-        {
-            if (csTeam == null || player.Team == csTeam)
-            {
-                players++;
-            }
-        }
-
-        return players;
+        return Utilities.GetPlayers().Count(player => IsAlive(player) && IsValid(player) && IsConnected(player) && (csTeam == null || player.Team == csTeam));
     }
 }
