@@ -16,16 +16,16 @@ public class Config : BasePluginConfig
     [JsonPropertyName("remove-bomb-planted-message")]
     public bool RemoveDefaultMsg { get; set; } = true;
     [JsonPropertyName("bombsite-A-img")]
-    public string BombsiteAimg { get; set; } = "https://i.imgur.com/Vjyuiqb.png";
+    public string BombsiteAimg { get; set; } = "https://raw.githubusercontent.com/audiomaster99/CS2BombsiteAnnouncer/main/.github/workflows/new-A.png";
     [JsonPropertyName("bombsite-B-img")]
-    public string BombsiteBimg { get; set; } = "https://i.imgur.com/WIC4VHx.png";
+    public string BombsiteBimg { get; set; } = "https://raw.githubusercontent.com/audiomaster99/CS2BombsiteAnnouncer/main/.github/workflows/new-B.png";
 }
 public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
 {
     public override string ModuleName => "BombsiteAnnouncer";
     public override string ModuleAuthor => "audio_brutalci";
     public override string ModuleDescription => "Simple bombsite announcer";
-    public override string ModuleVersion => "V. 0.0.2";
+    public override string ModuleVersion => "V. 0.0.3";
 
     public required Config Config { get; set; }
     public bool bombsiteAnnouncer;
