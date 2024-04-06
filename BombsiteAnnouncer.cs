@@ -88,7 +88,8 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
 
         CBombTarget site = new CBombTarget(NativeAPI.GetEntityFromIndex(@event.Site));
 
-        bombsite = site.IsBombSiteB ? "B" : "A";
+        //bombsite = site.IsBombSiteB ? "B" : "A";
+        bombsite = (@event.Site == 1) ? "B" : "A";
 
         ShowAnnouncer();
         Logger.LogInformation($"Bomb Planted on [{bombsite}]");
