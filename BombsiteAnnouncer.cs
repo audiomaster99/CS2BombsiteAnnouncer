@@ -75,7 +75,7 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         }
 
         player.PrintToCenterHtml(
-            $"<font class='fontSize-l' color='{color}'>{message} <font color='white'>SITE</font> <font color='{color}'>{bombsite}</font><br>" +
+            $"<font class='fontSize-l' color='{color}'>{message} <font color='white'>{Localizer["phrases.site"]}</font> <font color='{color}'>{bombsite}</font><br>" +
             $"<img src='{siteImage}'><br><br>" +
             $"<font class='fontSize-m' color='white'>{ttNum}</font> <font class='fontSize-m'color='red'>{Localizer["phrases.terrorist"]}   </font><font class='fontSize-m' color='white'> {Localizer["phrases.versus"]}</font>   <font class='fontSize-m' color='white'> {ctNum}   </font><font class='fontSize-m' color='blue'>{Localizer["phrases.cterrorist"]}</font>"
         );
