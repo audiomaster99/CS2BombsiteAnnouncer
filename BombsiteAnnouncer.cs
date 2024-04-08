@@ -19,25 +19,41 @@ public class Config : BasePluginConfig
     public string BombsiteAimg { get; set; } = "https://raw.githubusercontent.com/audiomaster99/CS2BombsiteAnnouncer/main/.github/workflows/new-A.png";
     [JsonPropertyName("bombsite-B-img")]
     public string BombsiteBimg { get; set; } = "https://raw.githubusercontent.com/audiomaster99/CS2BombsiteAnnouncer/main/.github/workflows/new-B.png";
+    [JsonPropertyName("show-site-info-text")]
+    public bool SiteText { get; set; } = true;
+    [JsonPropertyName("show-site-info-image")]
+    public bool SiteImage { get; set; } = true;
+    [JsonPropertyName("show-player-counter")]
+    public bool PlayerCounter { get; set; } = true;
+    [JsonPropertyName("ConfigVersion")]
+    public override int Version { get; set; } = 2;
 }
 public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
 {
     public override string ModuleName => "BombsiteAnnouncer";
     public override string ModuleAuthor => "audio_brutalci";
     public override string ModuleDescription => "Simple bombsite announcer";
-    public override string ModuleVersion => "V. 0.0.3";
+    public override string ModuleVersion => "V. 0.0.4";
 
     public required Config Config { get; set; }
     public bool bombsiteAnnouncer;
+    public bool isRetakesEnabled;
     public string? bombsite;
     public string? message;
     public string? color;
+    public string? siteTextString;
+    public string? siteImageString;
+    public string? playerCounterString;
+    public string? siteImage;
+    public string? breakLine;
     public int ctNum;
     public int ttNum;
 
     public override void Load(bool hotReload)
     {
         Logger.LogInformation("BombsiteAnnouncer Plugin has started!");
+
+        AddTimer(0.1f, () => { IsRetakesPluginInstalled(); });
 
         RegisterListener<Listeners.OnTick>(() =>
         {
@@ -47,22 +63,23 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
             }
         });
     }
+
     public void OnConfigParsed(Config config)
     {
+        if (config.Version < Config.Version)
+        {
+            Logger.LogWarning($"You should update your config. Your version {config.Version}, Expected version is {Config.Version}");
+        }
+
         Config = config;
     }
+
     private void OnTick(CCSPlayerController player)
     {
         ctNum = GetCurrentNumPlayers(CsTeam.CounterTerrorist);
         ttNum = GetCurrentNumPlayers(CsTeam.Terrorist);
 
         // determine site image
-        string siteImage = bombsite == "B" ? Config.BombsiteBimg : bombsite == "A" ? Config.BombsiteAimg : "";
-        if (siteImage == "")
-        {
-            Logger.LogWarning($"Unknown bombsite value: {bombsite}");
-        }
-
         if (player.Team == CsTeam.CounterTerrorist)
         {
             color = "green";
@@ -73,24 +90,57 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
             color = "red";
             message = Localizer["phrases.defend"];
         }
-
-        player.PrintToCenterHtml(
-            $"<font class='fontSize-l' color='{color}'>{message} <font color='white'>{Localizer["phrases.site"]}</font> <font color='{color}'>{bombsite}</font><br>" +
-            $"<img src='{siteImage}'><br><br>" +
-            $"<font class='fontSize-m' color='white'>{ttNum}</font> <font class='fontSize-m'color='red'>{Localizer["phrases.terrorist"]}   </font><font class='fontSize-m' color='white'> {Localizer["phrases.versus"]}</font>   <font class='fontSize-m' color='white'> {ctNum}   </font><font class='fontSize-m' color='blue'>{Localizer["phrases.cterrorist"]}</font>"
-        );
+        ctNum = GetCurrentNumPlayers(CsTeam.CounterTerrorist);
+        ttNum = GetCurrentNumPlayers(CsTeam.Terrorist);
+        HandleCustomizedMessage();
+        player.PrintToCenterHtml(siteTextString + siteImageString + playerCounterString);
     }
 
+    public void ShowAnnouncer()
+    {
+        AddTimer(Config.ShowAnnouncerDelay, () =>
+        {
+            bombsiteAnnouncer = true;
+            AddTimer(Config.AnnouncerVisibleForTime, () => { bombsiteAnnouncer = false; });
+        });
+    }
+
+    public void HandleCustomizedMessage()
+    {
+        siteTextString = Config.SiteText ? $"<font class='fontSize-l' color='{color}'>{message} <font color='white'>{Localizer["phrases.site"]}</font> <font color='{color}'>{bombsite}</font>{breakLine}" : "";
+        siteImageString = Config.SiteImage ? $"<img src='{siteImage}'>  {breakLine}" : "";
+        playerCounterString = Config.PlayerCounter ? $"<font class='fontSize-m' color='white'>{ttNum}</font> <font class='fontSize-m'color='red'>{Localizer["phrases.terrorist"]}   </font><font class='fontSize-m' color='white'> {Localizer["phrases.versus"]}</font>   <font class='fontSize-m' color='white'> {ctNum}   </font><font class='fontSize-m' color='blue'>{Localizer["phrases.cterrorist"]}</font>" : "";
+
+        //fix bad looking message if some lines are not displayed
+        //caused by line-break
+        if (!Config.SiteText && !Config.PlayerCounter && Config.SiteImage) { breakLine = ""; }
+        else if (Config.SiteText && !Config.PlayerCounter && !Config.SiteImage) { breakLine = ""; }
+        else { breakLine = "<br>"; }
+    }
+
+    public void GetSiteImage()
+    {
+        siteImage = bombsite == "B" ? Config.BombsiteBimg : bombsite == "A" ? Config.BombsiteAimg : "";
+        if (siteImage == "")
+        {
+            Logger.LogWarning($"Unknown bombsite value: {bombsite}");
+        }
+    }
     //---- P L U G I N - H O O O K S ----
     [GameEventHandler(HookMode.Pre)]
     public HookResult OnBombPlanted(EventBombPlanted @event, GameEventInfo info)
     {
 
+        CCSPlayerController player = @event.Userid;
         CBombTarget site = new CBombTarget(NativeAPI.GetEntityFromIndex(@event.Site));
 
-        //bombsite = site.IsBombSiteB ? "B" : "A";
-        bombsite = (@event.Site == 1) ? "B" : "A";
+        if (isRetakesEnabled == true)
+        {
+            bombsite = (@event.Site == 1) ? "B" : "A";
+        }
+        else bombsite = site.IsBombSiteB ? "B" : "A";
 
+        GetSiteImage();
         ShowAnnouncer();
         Logger.LogInformation($"Bomb Planted on [{bombsite}]");
 
@@ -138,17 +188,18 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
     {
         return player.PawnIsAlive;
     }
-    public void ShowAnnouncer()
-    {
-        AddTimer(Config.ShowAnnouncerDelay, () =>
-        {
-            bombsiteAnnouncer = true;
-            AddTimer(Config.AnnouncerVisibleForTime, () => { bombsiteAnnouncer = false; });
-        });
-    }
-    // Credits B3none
     public static int GetCurrentNumPlayers(CsTeam? csTeam = null)
     {
         return Utilities.GetPlayers().Count(player => IsAlive(player) && IsValid(player) && IsConnected(player) && (csTeam == null || player.Team == csTeam));
+    }
+    public void IsRetakesPluginInstalled()
+    {
+        string? path = Directory.GetParent(ModuleDirectory)?.FullName;
+        if (Directory.Exists(path + "/RetakesPlugin"))
+        {
+            Logger.LogInformation("RETAKES MODE ENABLED");
+            isRetakesEnabled = true;
+        }
+        else isRetakesEnabled = false;
     }
 }
