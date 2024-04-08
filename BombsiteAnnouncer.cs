@@ -66,10 +66,6 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
 
     public void OnConfigParsed(Config config)
     {
-        if (config.Version < Config.Version)
-        {
-            Logger.LogWarning($"You should update your config. Your version {config.Version}, Expected version is {Config.Version}");
-        }
 
         Config = config;
     }
