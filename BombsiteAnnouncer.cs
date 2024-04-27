@@ -33,7 +33,7 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
     public override string ModuleName => "BombsiteAnnouncer";
     public override string ModuleAuthor => "audio_brutalci";
     public override string ModuleDescription => "Simple bombsite announcer";
-    public override string ModuleVersion => "V. 0.0.4";
+    public override string ModuleVersion => "V. 0.0.5";
 
     public required Config Config { get; set; }
     public bool bombsiteAnnouncer;
