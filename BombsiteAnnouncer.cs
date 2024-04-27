@@ -75,7 +75,6 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         ctNum = GetCurrentNumPlayers(CsTeam.CounterTerrorist);
         ttNum = GetCurrentNumPlayers(CsTeam.Terrorist);
 
-        // determine site image
         if (player.Team == CsTeam.CounterTerrorist)
         {
             color = "green";
@@ -86,8 +85,6 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
             color = "red";
             message = Localizer["phrases.defend"];
         }
-        ctNum = GetCurrentNumPlayers(CsTeam.CounterTerrorist);
-        ttNum = GetCurrentNumPlayers(CsTeam.Terrorist);
         HandleCustomizedMessage();
         player.PrintToCenterHtml(siteTextString + siteImageString + playerCounterString);
     }
@@ -186,7 +183,7 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
     }
     public static int GetCurrentNumPlayers(CsTeam? csTeam = null)
     {
-        return Utilities.GetPlayers().Count(player => IsAlive(player) && IsValid(player) && IsConnected(player) && (csTeam == null || player.Team == csTeam));
+        return Utilities.GetPlayers().Count(player => IsAlive(player) && IsConnected(player) && (csTeam == null || player.Team == csTeam));
     }
     public void IsRetakesPluginInstalled()
     {
