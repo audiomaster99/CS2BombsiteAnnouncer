@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
@@ -16,24 +17,31 @@ public class Config : BasePluginConfig
     [JsonPropertyName("remove-bomb-planted-message")]
     public bool RemoveDefaultMsg { get; set; } = true;
     [JsonPropertyName("bombsite-A-img")]
-    public string BombsiteAimg { get; set; } = "https://raw.githubusercontent.com/audiomaster99/CS2BombsiteAnnouncer/main/.github/workflows/new-A.png";
+    public string BombsiteAimg { get; set; } = "https://raw.githubusercontent.com/audiomaster99/CS2BombsiteAnnouncer/main/img/Site-A.png";
     [JsonPropertyName("bombsite-B-img")]
-    public string BombsiteBimg { get; set; } = "https://raw.githubusercontent.com/audiomaster99/CS2BombsiteAnnouncer/main/.github/workflows/new-B.png";
+    public string BombsiteBimg { get; set; } = "https://raw.githubusercontent.com/audiomaster99/CS2BombsiteAnnouncer/main/img/Site-B.png";
     [JsonPropertyName("show-site-info-text")]
     public bool SiteText { get; set; } = true;
     [JsonPropertyName("show-site-info-image")]
     public bool SiteImage { get; set; } = true;
     [JsonPropertyName("show-player-counter")]
     public bool PlayerCounter { get; set; } = true;
+    [JsonPropertyName("show-announcer-flags")]
+    public List<string> ShowAnnouncerFlags { get; set; } = new List<string>
+        {
+            "@css/vip",
+            "#css/admin",
+            "leave empty to show announcer to everyone"
+        };
     [JsonPropertyName("ConfigVersion")]
-    public override int Version { get; set; } = 2;
+    public override int Version { get; set; } = 3;
 }
 public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
 {
     public override string ModuleName => "BombsiteAnnouncer";
     public override string ModuleAuthor => "audio_brutalci";
     public override string ModuleDescription => "Simple bombsite announcer";
-    public override string ModuleVersion => "V. 0.0.5";
+    public override string ModuleVersion => "V. 0.0.6";
 
     public required Config Config { get; set; }
     public bool bombsiteAnnouncer;
@@ -59,7 +67,7 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         {
             if (bombsiteAnnouncer == true)
             {
-                Utilities.GetPlayers().Where(player => IsValid(player) && IsConnected(player)).ToList().ForEach(p => OnTick(p));
+                Utilities.GetPlayers().Where(player => IsValid(player) && IsConnected(player) && PlayerHasPermissions(player)).ToList().ForEach(p => OnTick(p));
             }
         });
     }
@@ -119,12 +127,13 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
             Logger.LogWarning($"Unknown bombsite value: {bombsite}");
         }
     }
+
     //---- P L U G I N - H O O O K S ----
     [GameEventHandler(HookMode.Pre)]
     public HookResult OnBombPlanted(EventBombPlanted @event, GameEventInfo info)
     {
 
-        CCSPlayerController player = @event.Userid;
+        CCSPlayerController? player = @event.Userid;
         CBombTarget site = new CBombTarget(NativeAPI.GetEntityFromIndex(@event.Site));
 
         if (isRetakesEnabled == true)
@@ -144,47 +153,56 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
         }
         return HookResult.Continue;
     }
+
     [GameEventHandler]
     public HookResult OnBombDefused(EventBombDefused @event, GameEventInfo info)
     {
         bombsiteAnnouncer = false;
         return HookResult.Continue;
     }
+
     [GameEventHandler]
     public HookResult OnBombDetonate(EventBombExploded @event, GameEventInfo info)
     {
         bombsiteAnnouncer = false;
         return HookResult.Continue;
     }
+
     [GameEventHandler]
     public HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
     {
         bombsiteAnnouncer = false;
         return HookResult.Continue;
     }
+
     [GameEventHandler]
     public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
     {
         bombsiteAnnouncer = false;
         return HookResult.Continue;
     }
+
     //---- P L U G I N - H E L P E R S ----
     static bool IsValid(CCSPlayerController? player)
     {
         return player?.IsValid == true && player.PlayerPawn?.IsValid == true && !player.IsBot && !player.IsHLTV;
     }
+
     static bool IsConnected(CCSPlayerController? player)
     {
         return player?.Connected == PlayerConnectedState.PlayerConnected;
     }
+
     static bool IsAlive(CCSPlayerController player)
     {
         return player.PawnIsAlive;
     }
+
     public static int GetCurrentNumPlayers(CsTeam? csTeam = null)
     {
         return Utilities.GetPlayers().Count(player => IsAlive(player) && IsConnected(player) && (csTeam == null || player.Team == csTeam));
     }
+
     public void IsRetakesPluginInstalled()
     {
         string? path = Directory.GetParent(ModuleDirectory)?.FullName;
@@ -194,5 +212,33 @@ public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
             isRetakesEnabled = true;
         }
         else isRetakesEnabled = false;
+    }
+
+    public bool PlayerHasPermissions(CCSPlayerController player)
+    {
+        if (Config.ShowAnnouncerFlags.Count == 0)
+            return true;
+
+        bool hasPermission = false;
+
+        foreach (string checkPermission in Config.ShowAnnouncerFlags)
+        {
+            switch (checkPermission[0])
+            {
+                case '@':
+                    if (AdminManager.PlayerHasPermissions(player, checkPermission))
+                        hasPermission = true;
+                    break;
+                case '#':
+                    if (AdminManager.PlayerInGroup(player, checkPermission))
+                        hasPermission = true;
+                    break;
+                default:
+                    if (AdminManager.PlayerHasCommandOverride(player, checkPermission))
+                        hasPermission = true;
+                    break;
+            }
+        }
+        return hasPermission;
     }
 }
