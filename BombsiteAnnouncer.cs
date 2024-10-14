@@ -31,7 +31,7 @@ public class Config : BasePluginConfig
         {
             "@css/vip",
             "#css/admin",
-            "leave empty to show announcer to everyone"
+            "leave empty array []; to show announcer to everyone"
         };
     [JsonPropertyName("ConfigVersion")]
     public override int Version { get; set; } = 3;
@@ -39,9 +39,9 @@ public class Config : BasePluginConfig
 public partial class BombsiteAnnouncer : BasePlugin, IPluginConfig<Config>
 {
     public override string ModuleName => "BombsiteAnnouncer";
-    public override string ModuleAuthor => "audio_brutalci";
+    public override string ModuleAuthor => "itsAudio";
     public override string ModuleDescription => "Simple bombsite announcer";
-    public override string ModuleVersion => "V. 0.0.6";
+    public override string ModuleVersion => "V. 0.0.7";
 
     public required Config Config { get; set; }
     public bool bombsiteAnnouncer;
